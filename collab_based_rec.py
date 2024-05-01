@@ -3,9 +3,6 @@ import pandas as pd
 import math
 
 
-liked_anime_list = [1, 21, 40748, 10629, 16498, 18397]
-
-
 def generate_rating(liked_anime_list, rating=10):
     """
         From a liked anime list, generate a defined rating and returns a DataFrame of that interaction,
@@ -83,7 +80,6 @@ def find_total_similar_user_interactions(anime_list, coverage=1, min_anime_simil
     coverage_count = 0
 
     for i in files:
-        print(f"Visiting file {i}")
         data = pd.read_parquet(f'score/users_scores_{i}.parquet')
         temp = find_similar_user_interactions(data, anime_list, min_anime_similar, max_members - counter, max_anime_reviewed)
         users.append(temp)
@@ -94,7 +90,6 @@ def find_total_similar_user_interactions(anime_list, coverage=1, min_anime_simil
             break
 
         if counter >= max_members:
-            print("Max member: " + str(counter))
             break
 
     return pd.concat(users, axis=0)
@@ -130,7 +125,6 @@ def create_recommendation_matrix(liked_anime_list, anime_percentage=0.6):
                                                                 max_anime_reviewed=500)
     my_ratings = generate_rating(liked_anime_list, rating=10)
     interactions = pd.concat([my_ratings, similar_interactions], axis=0)
-
     interactions["user_index"] = interactions["user_id"].astype("category").cat.codes
     interactions["anime_index"] = interactions["anime_id"].astype("category").cat.codes
 
@@ -170,7 +164,7 @@ def create_anime_recommendation_df(rating_matrix, interactions):
     return anime_recs
 
 
-def recommend_anime(anime_recs, min_count=2, min_mean=7):
+def recommend_collab_anime(anime_recs, liked_anime_list, min_count=2, min_mean=7):
     """
     Generates a ranked list of anime recommendations based on aggregated ratings.
 
@@ -207,5 +201,12 @@ def recommend_anime(anime_recs, min_count=2, min_mean=7):
     merged['recommend_score'] = merged['mean'] * merged['adjusted_count']
     merged.sort_values("recommend_score", ascending=False, inplace=True)
 
-    return merged[['Name', 'Score', 'Scored By', 'recommend_score']]
+    return merged[['anime_id', 'Name', 'Score', 'Scored By', 'recommend_score']]
+
+def get_recommandation_collab_tab(fav_anime_list):
+    rating_matrix, interactions = create_recommendation_matrix(fav_anime_list, anime_percentage=0.8)
+    anime_recs = create_anime_recommendation_df(rating_matrix, interactions)
+    animeList = recommend_collab_anime(anime_recs, fav_anime_list) 
+    animeList = animeList[['anime_id', 'recommend_score']]
+    return animeList
 
