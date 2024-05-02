@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a6b3b3ed-6a9e-45a2-8d5f-3475f877ee14" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/content_based_rec.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/content_based_rec.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/search.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/search.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/recommender.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/recommender.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +34,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;try__merging&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;momo3&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
@@ -52,7 +53,8 @@
       <workItem from="1714428371964" duration="812000" />
       <workItem from="1714459671066" duration="10152000" />
       <workItem from="1714548936043" duration="92000" />
-      <workItem from="1714549756242" duration="3871000" />
+      <workItem from="1714549756242" duration="4559000" />
+      <workItem from="1714631939216" duration="523000" />
     </task>
     <servers />
   </component>
