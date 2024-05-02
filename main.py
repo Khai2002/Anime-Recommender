@@ -1,7 +1,8 @@
 from collab_based_rec import *
 from content_based_rec import *
 
-fav_anime_list = [21]
+#fav_anime_list = [1, 21, 40748, 10629, 16498, 18397]
+fav_anime_list = [(12859,2), (21,2), (1,10)]
 
 def show_names(anime_ids, anime_list):
     animes = []
@@ -28,6 +29,7 @@ def recommendation_anime(fav_anime_list):
 
 if __name__ == "__main__":
     anime_list = pd.read_parquet('anime/anime.parquet')
-    show_names(recommendation_anime(fav_anime_list), anime_list)
-
+    #show_names(recommendation_anime(fav_anime_list), anime_list)
+    collab_tab = get_recommandation_collab_tab(fav_anime_list)
+    print(collab_tab)
 
