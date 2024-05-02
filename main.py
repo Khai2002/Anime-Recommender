@@ -1,7 +1,7 @@
 from collab_based_rec import *
 from content_based_rec import *
 
-fav_anime_list = [(21,10)]
+fav_anime_list = [(21,10),(1,9)]
 filter_name = 0
 
 def filter_anime_name(fav_anime_list, recommended_animes) :
@@ -39,11 +39,7 @@ def recommendation_anime(fav_anime_list, filter_name=0):
     collab_tab = get_recommandation_collab_tab(fav_anime_list)
     content_tab = get_recommandation_content_tab(fav_anime_list)
 
-    print(collab_tab)
-
     similarities_tab = merge_score(collab_tab, content_tab)
-
-    print(similarities_tab)
 
     sorted_df = similarities_tab.sort_values(by='total_score', ascending=False)
     top_anime_ids = sorted_df.head(200)['anime_id'].tolist()

@@ -126,13 +126,6 @@ def recommendation_synopsis_based(fav_anime_list, anime_list, cosine_sim):
     all_sim_scores = []
 
     id_list = anime_list[anime_list['anime_id'].isin(fav_anime_ids)].index
-    
-    '''
-    # Compute average similarity scores from all provided indices
-    for idx in id_list:
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        all_sim_scores.append(sim_scores)
-    '''
 
     # Compute average similarity scores from all provided indices
     for anime_id, rating in fav_anime_list:
