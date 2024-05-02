@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 
-def generate_rating(liked_anime_list, rating=10):
+def generate_rating(liked_anime_list):
     """
         From a liked anime list, generate a defined rating and returns a DataFrame of that interaction,
         formatted similarly to the score files
@@ -17,7 +17,7 @@ def generate_rating(liked_anime_list, rating=10):
 
     """
     interaction_list = []
-    for book in liked_anime_list:
+    for book, rating in liked_anime_list:
         interaction_list.append([0, book, rating])
     return pd.DataFrame(interaction_list, columns=['user_id', 'anime_id', 'rating'])
 
@@ -118,12 +118,13 @@ def create_recommendation_matrix(liked_anime_list, anime_percentage=0.6):
         - ValueError: If the input data is not in the expected format.
         - FileNotFoundError: If a specified file does not exist.
         """
-    number_anime = len(liked_anime_list)
+    liked_anime_ids = [anime_id for anime_id, _ in liked_anime_list]
+    number_anime = len(liked_anime_ids)
     min_anime_similar = math.ceil(anime_percentage * number_anime)
-    similar_interactions = find_total_similar_user_interactions(liked_anime_list, coverage=5,
+    similar_interactions = find_total_similar_user_interactions(liked_anime_ids, coverage=5,
                                                                 min_anime_similar=min_anime_similar,
                                                                 max_anime_reviewed=500)
-    my_ratings = generate_rating(liked_anime_list, rating=10)
+    my_ratings = generate_rating(liked_anime_list)
     interactions = pd.concat([my_ratings, similar_interactions], axis=0)
     interactions["user_index"] = interactions["user_id"].astype("category").cat.codes
     interactions["anime_index"] = interactions["anime_id"].astype("category").cat.codes
@@ -192,8 +193,10 @@ def recommend_collab_anime(anime_recs, liked_anime_list, min_count=2, min_mean=7
     anime_list = pd.read_parquet('anime/anime.parquet')
     merged = pd.merge(anime_recs, anime_list, how='inner', on='anime_id')
 
+    liked_anime_ids = [anime_id for anime_id, _ in liked_anime_list]
+
     # Filter out already watched anime
-    merged = merged.loc[~merged['anime_id'].isin(liked_anime_list)]
+    merged = merged.loc[~merged['anime_id'].isin(liked_anime_ids)]
     merged = merged.loc[(merged['count'] > min_count) & (merged['mean'] > min_mean)]
 
     # Rank the recommendation
@@ -209,4 +212,3 @@ def get_recommandation_collab_tab(fav_anime_list):
     animeList = recommend_collab_anime(anime_recs, fav_anime_list) 
     animeList = animeList[['anime_id', 'recommend_score']]
     return animeList
-

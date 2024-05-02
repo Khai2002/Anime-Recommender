@@ -116,17 +116,28 @@ def adjust_dispersion(df, factor=0.25):
 
 ## Synopsis
 def recommendation_synopsis_based(fav_anime_list, anime_list, cosine_sim):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
     
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
 
     # Initialize a list to collect all similarity scores
     all_sim_scores = []
-    id_list = anime_list[anime_list['anime_id'].isin(fav_anime_list)].index
+
+    id_list = anime_list[anime_list['anime_id'].isin(fav_anime_ids)].index
+    
+    '''
     # Compute average similarity scores from all provided indices
     for idx in id_list:
         sim_scores = list(enumerate(cosine_sim[idx]))
+        all_sim_scores.append(sim_scores)
+    '''
+
+    # Compute average similarity scores from all provided indices
+    for anime_id, rating in fav_anime_list:
+        idx = anime_list[anime_list['anime_id'] == anime_id].index[0]  # Get index of anime in anime_list
+        sim_scores = [(idx, score * (rating/10)) for idx, score in enumerate(cosine_sim[idx])]
         all_sim_scores.append(sim_scores)
 
     # Calculate the mean of the similarity scores across all provided indices
@@ -153,11 +164,12 @@ def recommendation_synopsis_based(fav_anime_list, anime_list, cosine_sim):
 
 ## Date
 def recommendation_date_based(fav_anime_list, anime_list):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
     similarities = []
 
-    fav_date =  anime_list.loc[anime_list['anime_id'].isin(fav_anime_list)  , 'Aired' ].mean()
-    dates  = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list)  , 'Aired']
+    fav_date =  anime_list.loc[anime_list['anime_id'].isin(fav_anime_ids)  , 'Aired' ].mean()
+    dates  = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids)  , 'Aired']
 
     for date in dates :
         similarities.append(abs(date -  fav_date))
@@ -177,17 +189,24 @@ def recommendation_date_based(fav_anime_list, anime_list):
 
 ## Genre
 def recommendation_genre_based(fav_anime_list, anime_list):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
 
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
     
     similarities = []
 
-    fav_genres = anime_list.loc[anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Genre').columns].sum()
+    temp_anime_list = anime_list.copy()
+    genre_columns = anime_list.filter(like='Genre').columns.tolist()
+
+    for anime_id, rating in fav_anime_list:
+        temp_anime_list.loc[temp_anime_list['anime_id'] == anime_id, genre_columns] *= rating
+
+    fav_genres = temp_anime_list.loc[temp_anime_list['anime_id'].isin(fav_anime_ids), temp_anime_list.filter(regex='^Genre').columns].sum()
     fav_genres_prop = fav_genres / fav_genres.sum()
 
-    other_anime_genres = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Genre').columns]
+    other_anime_genres = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), anime_list.filter(regex='^Genre').columns]
     for _, row in other_anime_genres.iterrows():
         genre_similarity = sum(row[genre] * fav_genres_prop[genre] for genre in fav_genres_prop.index)
         similarities.append(genre_similarity)
@@ -196,19 +215,24 @@ def recommendation_genre_based(fav_anime_list, anime_list):
 
 ## Rating
 def recommendation_rating_based(fav_anime_list, anime_list):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
 
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
     
     similarities = []
 
-    fav_ratings = anime_list.loc[anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Rating').columns].sum()
+    temp_anime_list = anime_list.copy()
+    rating_columns = anime_list.filter(like='Rating').columns.tolist()
+
+    for anime_id, rating in fav_anime_list:
+        temp_anime_list.loc[temp_anime_list['anime_id'] == anime_id, rating_columns] *= rating
+
+    fav_ratings = temp_anime_list.loc[temp_anime_list['anime_id'].isin(fav_anime_ids), temp_anime_list.filter(regex='^Rating').columns].sum()
     fav_ratings_prop = fav_ratings / fav_ratings.sum()
 
-    print(fav_ratings_prop)
-
-    other_anime_ratings = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Rating').columns]
+    other_anime_ratings = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), anime_list.filter(regex='^Rating').columns]
     for _, row in other_anime_ratings.iterrows():
         rating_similarity = sum(row[rate] * fav_ratings_prop[rate] for rate in fav_ratings_prop.index)
         similarities.append(rating_similarity)
@@ -218,17 +242,24 @@ def recommendation_rating_based(fav_anime_list, anime_list):
 
 ## Type
 def recommendation_type_based(fav_anime_list, anime_list):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
 
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
     
     similarities = []
 
-    fav_types = anime_list.loc[anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Type').columns].sum()
+    temp_anime_list = anime_list.copy()
+    type_columns = anime_list.filter(like='Type').columns.tolist()
+
+    for anime_id, rating in fav_anime_list:
+        temp_anime_list.loc[temp_anime_list['anime_id'] == anime_id, type_columns] *= rating
+
+    fav_types = temp_anime_list.loc[temp_anime_list['anime_id'].isin(fav_anime_ids), temp_anime_list.filter(regex='^Type').columns].sum()
     fav_types_prop = fav_types / fav_types.sum()
 
-    other_anime_types = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Type').columns]
+    other_anime_types = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), anime_list.filter(regex='^Type').columns]
     for _, row in other_anime_types.iterrows():
         type_similarity = sum(row[type] * fav_types_prop[type] for type in fav_types_prop.index)
         similarities.append(type_similarity)
@@ -237,17 +268,24 @@ def recommendation_type_based(fav_anime_list, anime_list):
 
 ## Source
 def recommendation_source_based(fav_anime_list, anime_list):
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
 
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
     
     similarities = []
 
-    fav_sources = anime_list.loc[anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Source').columns].sum()
+    temp_anime_list = anime_list.copy()
+    source_columns = anime_list.filter(like='Source').columns.tolist()
+
+    for anime_id, rating in fav_anime_list:
+        temp_anime_list.loc[temp_anime_list['anime_id'] == anime_id, source_columns] *= rating
+
+    fav_sources = temp_anime_list.loc[temp_anime_list['anime_id'].isin(fav_anime_ids), temp_anime_list.filter(regex='^Source').columns].sum()
     fav_sources_prop = fav_sources / fav_sources.sum()
 
-    other_anime_sources = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), anime_list.filter(regex='^Source').columns]
+    other_anime_sources = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), anime_list.filter(regex='^Source').columns]
     for _, row in other_anime_sources.iterrows():
         source_similarity = sum(row[source] * fav_sources_prop[source] for source in fav_sources_prop.index)
         similarities.append(source_similarity)
@@ -257,8 +295,8 @@ def recommendation_source_based(fav_anime_list, anime_list):
 
 ## Duration
 def recommendation_duration_based(fav_anime_list, anime_list):
-
-    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'anime_id'].values
+    fav_anime_ids = [anime_id for anime_id, _ in fav_anime_list]
+    anime_ids = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'anime_id'].values
 
     if not fav_anime_list:
         return pd.DataFrame({'anime_id': anime_ids, 'similarity': 0})
@@ -266,9 +304,9 @@ def recommendation_duration_based(fav_anime_list, anime_list):
     
     similarities = []
 
-    avg_fav_duration = anime_list.loc[anime_list['anime_id'].isin(fav_anime_list), 'Total_Duration'].mean()
+    avg_fav_duration = anime_list.loc[anime_list['anime_id'].isin(fav_anime_ids), 'Total_Duration'].mean()
 
-    other_anime_durations = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_list), 'Total_Duration']
+    other_anime_durations = anime_list.loc[~anime_list['anime_id'].isin(fav_anime_ids), 'Total_Duration']
 
     for duration in other_anime_durations:
         if duration != 0:
@@ -283,17 +321,17 @@ def recommendation_duration_based(fav_anime_list, anime_list):
 
 def preprocess_fav_anime_list(fav_anime_list, anime_list, feature):
     if feature == 'genre':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Genre UNKNOWN'].values[0] == 0]
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Genre UNKNOWN'].values[0] == 0]
     elif feature == 'duration':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Episodes'].values[0] != 0 and anime_list.loc[anime_list['anime_id'] == anime_id, 'Duration'].values[0] != 0]
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Episodes'].values[0] != 0 and anime_list.loc[anime_list['anime_id'] == anime_id, 'Duration'].values[0] != 0]
     elif feature == 'type':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Type UNKNOWN'].values[0] == 0]
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Type UNKNOWN'].values[0] == 0]
     elif feature == 'source':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Source Unknown'].values[0] == 0]
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Source Unknown'].values[0] == 0]
     elif feature == 'rating':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Rating UNKNOWN'].values[0] == 0]
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Rating UNKNOWN'].values[0] == 0]
     elif feature == 'synopsis':
-        filtered_fav_anime_list = [anime_id for anime_id in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Synopsis'].values[0] != '']
+        filtered_fav_anime_list = [(anime_id, rating) for anime_id, rating in fav_anime_list if anime_list.loc[anime_list['anime_id'] == anime_id, 'Synopsis'].values[0] != '']
     else:
         filtered_fav_anime_list = fav_anime_list
     return filtered_fav_anime_list
