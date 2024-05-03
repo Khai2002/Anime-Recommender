@@ -1,7 +1,7 @@
 from collab_based_rec import *
 from content_based_rec import *
 
-fav_anime_list = [(21,10),(1,9)]
+fav_anime_list = [(21,10) , (1 , 5)]
 filter_name = 0
 
 def filter_anime_name(fav_anime_list, recommended_animes) :
@@ -35,7 +35,7 @@ def merge_score(collab_tab, content_tab):
     final_tab['total_score'] = final_tab['recommend_score_content'] + final_tab['recommend_score_collab']
     return final_tab
 
-def recommendation_anime(fav_anime_list, filter_name=0):
+def recommendation_anime(fav_anime_list, filter_name=0 ):
     collab_tab = get_recommandation_collab_tab(fav_anime_list)
     content_tab = get_recommandation_content_tab(fav_anime_list)
 
@@ -72,6 +72,26 @@ def recommandation_anime_content_based(fav_anime_list, filter_name=0) :
     return top_anime_ids[:30]
 
 
+def recommandation_anime_collab_based(fav_anime_list, filter_name=0):
+    collab_tab = get_recommandation_collab_tab(fav_anime_list)
+    print(collab_tab.shape)
+
+
+    sorted_df = collab_tab.sort_values(by='recommend_score', ascending=False)
+    top_anime_ids = sorted_df.head(200)['anime_id'].tolist()
+    if filter_name == 1:
+        recommended_animes = []
+        for anime_id in top_anime_ids:
+            anime_name = anime_list.loc[anime_list['anime_id'] == anime_id, 'Name'].iloc[0]
+            recommended_animes.append({'anime_id': anime_id, 'Name': anime_name})
+
+        anime_names = pd.DataFrame(recommended_animes)
+        top_anime_ids = filter_anime_name(fav_anime_list, anime_names)
+
+    return top_anime_ids[:30]
+
+
+
 
 
 
@@ -84,7 +104,12 @@ if __name__ == "__main__":
 
     #show_names(recommendation_anime(fav_anime_list, 1), anime_list)
 
-    show_names(recommandation_anime_content_based(fav_anime_list, 1), anime_list)
+    #show_names(recommandation_anime_content_based(fav_anime_list, 1), anime_list)
+
+    #recommandation_anime_collab_based(fav_anime_list, 0)
+
+
+    show_names(recommandation_anime_collab_based(fav_anime_list, 0), anime_list)
 
 
 
